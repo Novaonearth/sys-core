@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SysCore — Systems Engineering Platform</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; background: #f5f4f0; color: #1a1a18; }
+.topbar { background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1); padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; }
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.logo-mark { width: 28px; height: 28px; border-radius: 6px; background: #3B8BD4; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #E6F1FB; }
+.app-name { font-size: 15px; font-weight: 500; color: #1a1a18; }
+.divider-v { height: 16px; width: 0.5px; background: rgba(0,0,0,0.12); margin: 0 4px; }
+.app-sub { font-size: 12px; color: #6b6b67; }
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b6b67; }
+.bc-sep { color: #b0aea6; }
+.bc-link { cursor: pointer; color: #185FA5; }
+.bc-link:hover { text-decoration: underline; }
+.bc-current { color: #1a1a18; font-weight: 500; }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+.badge-warn { background: #FAEEDA; color: #854F0B; }
+.badge-info { background: #E6F1FB; color: #185FA5; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: #EAF3DE; color: #3B6D11; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; }
+.page { display: none; padding: 24px 28px; flex-direction: column; gap: 24px; min-height: calc(100vh - 52px); }
+.page.active { display: flex; }
+.section-label { font-size: 11px; font-weight: 500; color: #9c9a92; letter-spacing:.07em; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; }
+.btn-add-card { font-size:11px; padding:5px 12px; border:0.5px solid rgba(0,0,0,0.2); border-radius:6px; background:transparent; color:#6b6b67; cursor:pointer; font-weight:400; }
+.btn-add-card:hover { background:#fff; color:#1a1a18; }
+.product-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+.pcard { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 14px; overflow: hidden; cursor: pointer; transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+.pcard:hover { border-color: rgba(0,0,0,0.22); transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+.pcard-header { padding: 16px 18px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.07); display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.pcard-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.icon-blue{background:#E6F1FB} .icon-green{background:#EAF3DE} .icon-amber{background:#FAEEDA} .icon-teal{background:#E1F5EE} .icon-purple{background:#EEEDFE} .icon-coral{background:#FAECE7}
+.pcard-name { font-size: 14px; font-weight: 500; color: #1a1a18; margin-bottom: 2px; }
+.pcard-type { font-size: 11px; color: #9c9a92; }
+.status-pill { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+.sp-active{background:#E6F1FB;color:#185FA5} .sp-planned{background:#EAF3DE;color:#3B6D11} .sp-review{background:#FAEEDA;color:#854F0B} .sp-ready{background:#EAF3DE;color:#3B6D11} .sp-draft{background:#f5f4f0;color:#6b6b67}
+.pcard-body { padding: 14px 18px; }
+.prog-labels { display: flex; justify-content: space-between; font-size: 11px; color: #6b6b67; margin-bottom: 4px; }
+.prog-track { height: 4px; background: #f0efe8; border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 2px; }
+.fill-blue{background:#378ADD} .fill-green{background:#639922} .fill-amber{background:#BA7517} .fill-teal{background:#1D9E75} .fill-purple{background:#7F77DD} .fill-coral{background:#D85A30}
+.qstats { display: flex; border-top: 0.5px solid rgba(0,0,0,0.07); }
+.qstat { flex: 1; padding: 9px 0; text-align: center; border-right: 0.5px solid rgba(0,0,0,0.07); }
+.qstat:last-child { border-right: none; }
+.qstat-val { font-size: 13px; font-weight: 500; color: #1a1a18; }
+.qstat-lbl { font-size: 10px; color: #9c9a92; margin-top: 1px; }
+.pcard-footer { padding: 10px 18px; border-top: 0.5px solid rgba(0,0,0,0.07); display: flex; align-items: center; justify-content: space-between; }
+.open-btn { font-size: 12px; color: #185FA5; background: none; border: none; cursor: pointer; padding: 0; }
+.open-btn:hover { text-decoration: underline; }
+.wdots { display: flex; align-items: center; gap: 3px; }
+.wdot { width: 7px; height: 7px; border-radius: 50%; }
+.wdot.done{background:#639922} .wdot.active{background:#378ADD} .wdot.open{background:#d0cfc8}
+.support-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.scard { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 14px; overflow: hidden; cursor: pointer; transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+.scard:hover { border-color: rgba(0,0,0,0.22); transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+.scard-inner { display: flex; align-items: stretch; }
+.scard-accent { width: 4px; flex-shrink: 0; }
+.acc-amber{background:#BA7517} .acc-teal{background:#1D9E75} .acc-purple{background:#7F77DD} .acc-coral{background:#D85A30} .acc-blue{background:#378ADD} .acc-green{background:#639922}
+.scard-content { flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.scard-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.scard-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.scard-name { font-size: 13px; font-weight: 500; color: #1a1a18; margin-bottom: 2px; }
+.scard-sub { font-size: 11px; color: #9c9a92; }
+.scard-row { display: flex; gap: 12px; }
+.scard-stat-val { font-size: 16px; font-weight: 500; color: #1a1a18; }
+.scard-stat-lbl { font-size: 10px; color: #9c9a92; }
+.scard-footer { padding: 8px 16px 8px 20px; border-top: 0.5px solid rgba(0,0,0,0.07); display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #6b6b67; }
+.detail-header { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 14px; padding: 20px 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.detail-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.detail-title { font-size: 20px; font-weight: 500; color: #1a1a18; margin-bottom: 3px; }
+.detail-sub { font-size: 13px; color: #6b6b67; }
+.detail-header-stats { margin-left: auto; display: flex; gap: 24px; flex-wrap: wrap; }
+.dhs { text-align: right; }
+.dhs-val { font-size: 18px; font-weight: 500; color: #1a1a18; }
+.dhs-lbl { font-size: 11px; color: #9c9a92; }
+.tabs { display: flex; border-bottom: 0.5px solid rgba(0,0,0,0.1); background: #fff; border-radius: 14px 14px 0 0; overflow-x: auto; }
+.tab-btn { padding: 12px 16px; font-size: 12px; color: #6b6b67; background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; font-family: inherit; flex-shrink: 0; }
+.tab-btn:hover { color: #1a1a18; background: #f5f4f0; }
+.tab-btn.active { color: #185FA5; border-bottom-color: #378ADD; font-weight: 500; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.tab-panel { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-top: none; border-radius: 0 0 14px 14px; padding: 20px 24px; }
+.tab-count { display:inline-block; font-size:10px; background:#f0efe8; color:#6b6b67; border-radius:10px; padding:1px 6px; margin-left:4px; }
+.workflow-steps { display: flex; align-items: flex-start; }
+.wf-step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; padding: 0 4px; }
+.wf-step:not(:last-child)::after { content:''; position:absolute; top:18px; right:-4px; width:8px; height:1px; background:rgba(0,0,0,0.15); z-index:1; }
+.wf-node { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; border: 0.5px solid; margin-bottom: 6px; z-index: 2; }
+.wf-node.done{background:#EAF3DE;color:#3B6D11;border-color:#97C459} .wf-node.active{background:#E6F1FB;color:#185FA5;border-color:#378ADD} .wf-node.open{background:#f5f4f0;color:#9c9a92;border-color:rgba(0,0,0,0.1)}
+.wf-label { font-size: 10px; color: #6b6b67; text-align: center; line-height: 1.3; }
+.wf-hint { margin-top: 16px; font-size: 12px; color: #9c9a92; }
+.req-table, .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.req-table th, .data-table th { text-align:left; font-size:10px; font-weight:500; color:#9c9a92; text-transform:uppercase; letter-spacing:.06em; padding:0 8px 10px 0; border-bottom:0.5px solid rgba(0,0,0,0.1); }
+.req-table td, .data-table td { padding:9px 8px 9px 0; border-bottom:0.5px solid rgba(0,0,0,0.06); color:#6b6b67; vertical-align:middle; }
+.req-table tr:last-child td, .data-table tr:last-child td { border-bottom:none; }
+.mono { font-family: "SF Mono","Fira Code",monospace; font-size:11px; color:#9c9a92; }
+.req-status { font-size:10px; padding:2px 7px; border-radius:10px; font-weight:500; white-space:nowrap; }
+.st-verified{background:#EAF3DE;color:#3B6D11} .st-review{background:#FAEEDA;color:#854F0B} .st-draft{background:#f5f4f0;color:#9c9a92} .st-released{background:#E6F1FB;color:#185FA5} .st-instock{background:#EAF3DE;color:#3B6D11} .st-onorder{background:#FAEEDA;color:#854F0B} .st-tbd{background:#f5f4f0;color:#9c9a92}
+.strong-cell { font-weight:500; color:#1a1a18; }
+.requestor-tag { display:inline-flex; align-items:center; gap:4px; font-size:10px; padding:2px 7px; border-radius:10px; background:#EEEDFE; color:#534AB7; font-weight:500; white-space:nowrap; }
+.requestor-tag::before { content:'↗'; font-size:9px; }
+.add-bar { display:flex; align-items:center; gap:8px; padding:14px 0 0; border-top:0.5px solid rgba(0,0,0,0.08); margin-top:4px; flex-wrap:wrap; }
+.add-bar input, .add-bar select { font-size:12px; padding:7px 10px; border:0.5px solid rgba(0,0,0,0.2); border-radius:8px; background:#fff; color:#1a1a18; font-family:inherit; outline:none; }
+.add-bar input { flex:1; min-width:160px; }
+.add-bar select { width:110px; }
+.add-bar input:focus, .add-bar select:focus { border-color:#378ADD; }
+.btn-primary { font-size:12px; padding:7px 14px; background:linear-gradient(135deg, #378ADD, #185FA5); color:#fff; border:none; border-radius:8px; cursor:pointer; font-family:inherit; white-space:nowrap; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 8px rgba(55, 138, 221, 0.3); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(55, 138, 221, 0.4); }
+.change-row { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:0.5px solid rgba(0,0,0,0.06); }
+.change-row:last-child { border-bottom:none; }
+.change-dot { width:8px; height:8px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+.change-body { flex:1; }
+.change-title { font-size:12px; font-weight:500; color:#1a1a18; margin-bottom:2px; }
+.change-meta { font-size:11px; color:#9c9a92; }
+.cs { font-size:10px; padding:2px 7px; border-radius:10px; font-weight:500; white-space:nowrap; }
+.cs-approved{background:#EAF3DE;color:#3B6D11} .cs-pending{background:#FAEEDA;color:#854F0B} .cs-open{background:#f5f4f0;color:#9c9a92}
+.dstat-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:20px; }
+.dstat { background:#f5f4f0; border-radius:10px; padding:12px 14px; }
+.dstat-val { font-size:20px; font-weight:500; color:#1a1a18; }
+.dstat-lbl { font-size:11px; color:#6b6b67; margin-top:2px; }
+.qual-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.qual-item { border:0.5px solid rgba(0,0,0,0.1); border-radius:10px; padding:12px 14px; }
+.qual-name { font-size:12px; font-weight:500; color:#1a1a18; margin-bottom:4px; }
+.qual-meta { font-size:11px; color:#9c9a92; margin-bottom:8px; }
+.qual-bar-track { height:3px; background:#f0efe8; border-radius:2px; overflow:hidden; }
+.qual-bar-fill { height:100%; border-radius:2px; }
+.empty-state { text-align:center; padding:28px 0; color:#9c9a92; font-size:12px; }
+.tab-section-title { font-size:13px; font-weight:500; color:#1a1a18; margin-bottom:14px; }
+.plm-product-block { margin-bottom:24px; }
+.plm-product-block:last-child { margin-bottom:0; }
+.plm-block-header { font-size:12px; font-weight:500; color:#1a1a18; padding:8px 0; border-bottom:0.5px solid rgba(0,0,0,0.1); display:flex; align-items:center; gap:8px; }
+.plm-block-icon { width:22px; height:22px; border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; }
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:1000; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:#fff; border-radius:16px; padding:28px 28px 24px; width:520px; max-width:calc(100vw - 40px); box-shadow:0 8px 40px rgba(0,0,0,0.18); display:flex; flex-direction:column; gap:18px; max-height:90vh; overflow-y:auto; }
+.modal-title { font-size:16px; font-weight:500; color:#1a1a18; }
+.modal-sub { font-size:12px; color:#6b6b67; margin-top:2px; }
+.form-row { display:flex; flex-direction:column; gap:5px; }
+.form-row label { font-size:11px; font-weight:500; color:#6b6b67; text-transform:uppercase; letter-spacing:.05em; }
+.form-row input, .form-row select { font-size:13px; padding:9px 12px; border:0.5px solid rgba(0,0,0,0.2); border-radius:9px; background:#fff; color:#1a1a18; font-family:inherit; outline:none; width:100%; }
+.form-row input:focus, .form-row select:focus { border-color:#378ADD; }
+.form-2col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.modal-emoji-row { display:flex; gap:8px; flex-wrap:wrap; }
+.emoji-opt { width:36px; height:36px; border-radius:8px; background:#f5f4f0; border:1.5px solid transparent; display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; }
+.emoji-opt:hover { background:#E6F1FB; }
+.emoji-opt.selected { border-color:#378ADD; background:#E6F1FB; }
+.color-row { display:flex; gap:8px; }
+.color-opt { width:24px; height:24px; border-radius:50%; border:2px solid transparent; cursor:pointer; }
+.color-opt.selected { border-color:#1a1a18; }
+.modal-footer { display:flex; gap:10px; justify-content:flex-end; padding-top:4px; }
+.btn-ghost { font-size:13px; padding:8px 16px; background:none; border:0.5px solid rgba(0,0,0,0.2); border-radius:9px; cursor:pointer; color:#6b6b67; font-family:inherit; }
+.btn-ghost:hover { background:#f5f4f0; }
+.btn-confirm { font-size:13px; padding:8px 18px; background:#378ADD; color:#fff; border:none; border-radius:9px; cursor:pointer; font-family:inherit; }
+.btn-confirm:hover { background:#185FA5; }
+@media (prefers-color-scheme: dark) {
+  body{background:#1e1e1c;color:#e0ddd4}
+  .topbar,.pcard,.scard,.detail-header,.tabs,.tab-panel,.qual-item,.modal{background:#2a2a28;border-color:rgba(255,255,255,0.09)}
+  .app-name,.pcard-name,.scard-name,.detail-title,.dhs-val,.qstat-val,.scard-stat-val,.dstat-val,.change-title,.qual-name,.strong-cell{color:#e0ddd4}
+  .app-sub,.pcard-type,.scard-sub,.detail-sub,.prog-labels,.wf-label,.scard-footer,.change-meta,.wf-hint{color:#9c9a92}
+  .section-label,.qstat-lbl,.scard-stat-lbl,.dhs-lbl,.dstat-lbl,.qual-meta{color:#6b6b67}
+  .divider-v{background:rgba(255,255,255,0.09)}
+  .btn-add-card{color:#9c9a92;border-color:rgba(255,255,255,0.15)}
+  .btn-add-card:hover{background:#333330;color:#e0ddd4}
+  .prog-track,.qual-bar-track,.dstat{background:#333330}
+  .wf-node.open{background:#333330;color:#6b6b67;border-color:rgba(255,255,255,0.09)}
+  .qstat{border-right-color:rgba(255,255,255,0.07)}
+  .req-table th,.data-table th{color:#6b6b67;border-bottom-color:rgba(255,255,255,0.09)}
+  .req-table td,.data-table td{color:#9c9a92;border-bottom-color:rgba(255,255,255,0.05)}
+  .change-row{border-bottom-color:rgba(255,255,255,0.05)}
+  .tab-btn{color:#9c9a92}
+  .tab-btn:hover{color:#e0ddd4;background:#333330}
+  .tab-btn.active{color:#85B7EB;border-bottom-color:#378ADD}
+  .wf-node.done{background:#27500A;color:#C0DD97;border-color:#3B6D11}
+  .wf-node.active{background:#0c447c;color:#85B7EB;border-color:#185FA5}
+  .st-verified,.cs-approved,.st-instock{background:#27500A;color:#C0DD97}
+  .st-review,.cs-pending,.st-onorder{background:#633806;color:#FAC775}
+  .st-draft,.cs-open,.st-tbd{background:#333330;color:#6b6b67}
+  .st-released{background:#0c447c;color:#85B7EB}
+  .sp-active{background:#0c447c;color:#85B7EB}
+  .sp-planned,.sp-ready{background:#27500A;color:#C0DD97}
+  .sp-review{background:#633806;color:#FAC775}
+  .sp-draft{background:#333330;color:#9c9a92}
+  .badge-warn{background:#633806;color:#FAC775}
+  .badge-info{background:#0c447c;color:#85B7EB}
+  .avatar{background:#27500A;color:#C0DD97}
+  .open-btn,.bc-link{color:#85B7EB}
+  .bc-current{color:#e0ddd4}
+  .tab-count{background:#333330;color:#6b6b67}
+  .icon-blue{background:#042C53} .icon-green{background:#173404} .icon-amber{background:#412402} .icon-teal{background:#04342C} .icon-purple{background:#26215C} .icon-coral{background:#4A1B0C}
+  .wdot.open{background:#444441}
+  .logo-mark{background:#185FA5;color:#B5D4F4}
+  .add-bar input,.add-bar select,.form-row input,.form-row select{background:#333330;color:#e0ddd4;border-color:rgba(255,255,255,0.15)}
+  .modal-overlay{background:rgba(0,0,0,0.6)}
+  .modal{box-shadow:0 8px 40px rgba(0,0,0,0.5)}
+  .modal-title{color:#e0ddd4}
+  .modal-sub{color:#9c9a92}
+  .btn-ghost{color:#9c9a92;border-color:rgba(255,255,255,0.15)}
+  .btn-ghost:hover{background:#333330}
+  .emoji-opt{background:#333330}
+  .emoji-opt:hover,.emoji-opt.selected{background:#0c447c;border-color:#378ADD}
+  .color-opt.selected{border-color:#e0ddd4}
+  .form-row label{color:#9c9a92}
+  .plm-block-header{color:#e0ddd4;border-bottom-color:rgba(255,255,255,0.09)}
+  .tab-section-title{color:#e0ddd4}
+  .requestor-tag{background:#26215C;color:#AFA9EC}
+  .pcard:hover,.scard:hover{border-color:rgba(255,255,255,0.2)}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-mark">SE</div>
+    <div class="app-name">SysCore</div>
+    <div class="divider-v"></div>
+    <div id="breadcrumb" class="breadcrumb"><span class="bc-current">Products</span></div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge badge-warn" id="review-badge">— reviews pending</span>
+    <span class="badge badge-info">v2.4.1</span>
+    <div class="avatar">JD</div>
+  </div>
+</div>
+<div id="page-home" class="page active">
+  <div>
+    <div class="section-label"><span>Products</span><button class="btn-add-card" onclick="openModal('product')">+ New product</button></div>
+    <div class="product-grid" id="product-grid"></div>
+  </div>
+  <div>
+    <div class="section-label"><span>Supporting products</span><button class="btn-add-card" onclick="openModal('support')">+ New support system</button></div>
+    <div class="support-grid" id="support-grid"></div>
+  </div>
+</div>
+<div id="page-detail" class="page">
+  <div class="detail-header" id="detail-header"></div>
+  <div><div class="tabs" id="detail-tabs"></div><div id="detail-tab-panels"></div></div>
+</div>
+<div class="modal-overlay" id="modal-product">
+  <div class="modal">
+    <div><div class="modal-title">Add new product</div><div class="modal-sub">Define a new main product or vehicle variant.</div></div>
+    <div class="form-row"><label>Product name</label><input type="text" id="mp-name" placeholder="e.g. Rocket — Type 3"/></div>
+    <div class="form-2col">
+      <div class="form-row"><label>Category / type</label><input type="text" id="mp-type" placeholder="e.g. Launch vehicle · Orbital"/></div>
+      <div class="form-row"><label>Status</label><select id="mp-status"><option>Draft</option><option>Planned</option><option>Active</option><option>In review</option></select></div>
+    </div>
+    <div class="form-row"><label>Icon</label>
+      <div class="modal-emoji-row" id="mp-emoji-row">
+        <div class="emoji-opt selected" data-e="🚀" onclick="pickEmoji('mp',this)">🚀</div>
+        <div class="emoji-opt" data-e="🛰" onclick="pickEmoji('mp',this)">🛰</div>
+        <div class="emoji-opt" data-e="⚙️" onclick="pickEmoji('mp',this)">⚙️</div>
+        <div class="emoji-opt" data-e="🔬" onclick="pickEmoji('mp',this)">🔬</div>
+        <div class="emoji-opt" data-e="🛸" onclick="pickEmoji('mp',this)">🛸</div>
+        <div class="emoji-opt" data-e="🔩" onclick="pickEmoji('mp',this)">🔩</div>
+        <div class="emoji-opt" data-e="🛡️" onclick="pickEmoji('mp',this)">🛡️</div>
+        <div class="emoji-opt" data-e="🧪" onclick="pickEmoji('mp',this)">🧪</div>
+      </div>
+    </div>
+    <div class="form-row"><label>Color accent</label>
+      <div class="color-row" id="mp-color-row">
+        <div class="color-opt selected" data-c="blue" style="background:#378ADD" onclick="pickColor('mp',this)"></div>
+        <div class="color-opt" data-c="green" style="background:#639922" onclick="pickColor('mp',this)"></div>
+        <div class="color-opt" data-c="amber" style="background:#BA7517" onclick="pickColor('mp',this)"></div>
+        <div class="color-opt" data-c="teal" style="background:#1D9E75" onclick="pickColor('mp',this)"></div>
+        <div class="color-opt" data-c="purple" style="background:#7F77DD" onclick="pickColor('mp',this)"></div>
+        <div class="color-opt" data-c="coral" style="background:#D85A30" onclick="pickColor('mp',this)"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('product')">Cancel</button>
+      <button class="btn-confirm" onclick="submitProduct()">Add product</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-support">
+  <div class="modal">
+    <div><div class="modal-title">Add new support system</div><div class="modal-sub">Define a new supporting product or infrastructure system.</div></div>
+    <div class="form-row"><label>System name</label><input type="text" id="ms-name" placeholder="e.g. Fuel storage system"/></div>
+    <div class="form-2col">
+      <div class="form-row"><label>Category</label><input type="text" id="ms-type" placeholder="e.g. Ground infrastructure"/></div>
+      <div class="form-row"><label>Status</label><select id="ms-status"><option>Draft</option><option>Planned</option><option>In review</option><option>Ready</option></select></div>
+    </div>
+    <div class="form-row"><label>Supports</label><input type="text" id="ms-supports" placeholder="e.g. all products, Rocket Type 1"/></div>
+    <div class="form-row"><label>Icon</label>
+      <div class="modal-emoji-row" id="ms-emoji-row">
+        <div class="emoji-opt selected" data-e="🏗" onclick="pickEmoji('ms',this)">🏗</div>
+        <div class="emoji-opt" data-e="📦" onclick="pickEmoji('ms',this)">📦</div>
+        <div class="emoji-opt" data-e="⛽" onclick="pickEmoji('ms',this)">⛽</div>
+        <div class="emoji-opt" data-e="🔌" onclick="pickEmoji('ms',this)">🔌</div>
+        <div class="emoji-opt" data-e="🏭" onclick="pickEmoji('ms',this)">🏭</div>
+        <div class="emoji-opt" data-e="🛢️" onclick="pickEmoji('ms',this)">🛢️</div>
+        <div class="emoji-opt" data-e="🔧" onclick="pickEmoji('ms',this)">🔧</div>
+        <div class="emoji-opt" data-e="📡" onclick="pickEmoji('ms',this)">📡</div>
+      </div>
+    </div>
+    <div class="form-row"><label>Color accent</label>
+      <div class="color-row" id="ms-color-row">
+        <div class="color-opt" data-c="blue" style="background:#378ADD" onclick="pickColor('ms',this)"></div>
+        <div class="color-opt selected" data-c="amber" style="background:#BA7517" onclick="pickColor('ms',this)"></div>
+        <div class="color-opt" data-c="teal" style="background:#1D9E75" onclick="pickColor('ms',this)"></div>
+        <div class="color-opt" data-c="purple" style="background:#7F77DD" onclick="pickColor('ms',this)"></div>
+        <div class="color-opt" data-c="coral" style="background:#D85A30" onclick="pickColor('ms',this)"></div>
+        <div class="color-opt" data-c="green" style="background:#639922" onclick="pickColor('ms',this)"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('support')">Cancel</button>
+      <button class="btn-confirm" onclick="submitSupport()">Add system</button>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+const statusPill={Active:'sp-active',Planned:'sp-planned',Draft:'sp-draft','In review':'sp-review',Ready:'sp-ready'};
+const colorFill={blue:'fill-blue',green:'fill-green',amber:'fill-amber',teal:'fill-teal',purple:'fill-purple',coral:'fill-coral'};
+const iconClass={blue:'icon-blue',green:'icon-green',amber:'icon-amber',teal:'icon-teal',purple:'icon-purple',coral:'icon-coral'};
+function allSystemNames(){return[...products.map(p=>p.name),...supports.map(s=>s.name)];}
+const products=[
+  {id:'rocket1',name:'Rocket — Type 1',type:'Launch vehicle · Orbital',status:'Active',icon:'🚀',color:'blue',progress:74,
+   reqs:[{id:'R1-001',text:'Max payload to LEO ≥ 1200 kg',source:'Customer',requestor:'Rocket — Type 1',status:'Verified'},{id:'R1-002',text:'Stage separation reliability > 99.9%',source:'Customer',requestor:'Rocket — Type 1',status:'Verified'},{id:'R1-003',text:'Max dynamic pressure ≤ 35 kPa',source:'Engineering',requestor:'Rocket — Type 1',status:'Verified'},{id:'R1-004',text:'Thermal protection system design',source:'Customer',requestor:'Launch pad system',status:'In review'},{id:'R1-005',text:'Avionics redundancy specification',source:'Engineering',requestor:'Rocket — Type 1',status:'In review'},{id:'R1-006',text:'Launch pad interface definition',source:'Ground ops',requestor:'Launch pad system',status:'Draft'}],
+   bom:[{id:'P1-001',desc:'LOX feed valve assembly',qty:2,assembly:'Stage 1 propulsion',status:'Released'},{id:'P1-002',desc:'Turbopump housing — main',qty:1,assembly:'Stage 1 propulsion',status:'Released'},{id:'P1-003',desc:'Interstage adapter ring',qty:1,assembly:'Stage interface',status:'In review'},{id:'P1-004',desc:'Avionics bay enclosure',qty:1,assembly:'Guidance system',status:'In review'},{id:'P1-005',desc:'Payload fairing half-shell',qty:2,assembly:'Fairing assembly',status:'Draft'}],
+   wfDone:2,wfActive:[3,4],wfTotal:7,tests:'18/26',changes:4,
+   changelog:[{dot:'#639922',title:'REQ-001 payload mass updated to 1250 kg',meta:'Mar 10, 2026 · J. Donaldson',cs:'cs-approved',label:'Approved'},{dot:'#639922',title:'Stage 1 propellant tank diameter revised',meta:'Mar 7, 2026 · A. Reyes',cs:'cs-approved',label:'Approved'},{dot:'#BA7517',title:'TPS material specification under review',meta:'Mar 12, 2026 · T. Müller',cs:'cs-pending',label:'Pending'},{dot:'#888780',title:'Launch pad interface ICD initiated',meta:'Mar 14, 2026 · A. Reyes',cs:'cs-open',label:'Open'}]},
+  {id:'rocket2',name:'Rocket — Type 2',type:'Launch vehicle · Suborbital',status:'Planned',icon:'🛰',color:'green',progress:22,
+   reqs:[{id:'R2-001',text:'Max altitude ≥ 100 km',source:'Customer',requestor:'Rocket — Type 2',status:'Verified'},{id:'R2-002',text:'Payload mass ≥ 200 kg',source:'Customer',requestor:'Rocket — Type 2',status:'In review'},{id:'R2-003',text:'Reusable first stage concept',source:'Engineering',requestor:'Rocket — Type 2',status:'Draft'},{id:'R2-004',text:'Launch preparation time ≤ 48 hrs',source:'Customer',requestor:'Launch pad system',status:'Draft'}],
+   bom:[{id:'P2-001',desc:'First stage airframe structure',qty:1,assembly:'Stage 1',status:'Draft'}],
+   wfDone:1,wfActive:[2],wfTotal:7,tests:'3/26',changes:2,
+   changelog:[{dot:'#639922',title:'Initial customer requirements baselined',meta:'Feb 20, 2026 · J. Donaldson',cs:'cs-approved',label:'Approved'},{dot:'#BA7517',title:'Payload mass requirement under negotiation',meta:'Mar 11, 2026 · A. Reyes',cs:'cs-pending',label:'Pending'}]}
+];
+const supports=[
+  {id:'launchpad',name:'Launch pad system',type:'Ground support · Main product',status:'In review',icon:'🏗',color:'amber',progress:51,supports:'Rocket Type 1, Type 2',
+   reqs:[{id:'LP-001',text:'Umbilical disconnect < 200 ms before liftoff',source:'System eng.',requestor:'Rocket — Type 1',status:'Verified'},{id:'LP-002',text:'Hold-down clamp release force ≥ 500 kN',source:'System eng.',requestor:'Rocket — Type 1',status:'In review'},{id:'LP-003',text:'Flame trench water deluge capacity',source:'Ground ops',requestor:'Launch pad system',status:'Draft'}],
+   bom:[{id:'LP-M001',desc:'Hold-down clamp assembly',qty:4,assembly:'Ground structure',status:'In stock'},{id:'LP-M002',desc:'Umbilical mast structure',qty:1,assembly:'Services tower',status:'On order'},{id:'LP-M003',desc:'Water deluge nozzle array',qty:24,assembly:'Flame trench',status:'TBD'}],
+   interfaces:2,changes:3,
+   changelog:[{dot:'#639922',title:'Hold-down clamp load case updated',meta:'Mar 9, 2026 · T. Müller',cs:'cs-approved',label:'Approved'},{dot:'#BA7517',title:'Flame trench geometry revision pending',meta:'Mar 13, 2026 · A. Reyes',cs:'cs-pending',label:'Pending'}]},
+  {id:'plm',name:'Inventory / PLM',type:'Parts & lifecycle management',status:'Ready',icon:'📦',color:'teal',progress:88,supports:'all products',reqs:[],bom:[],syncPct:88,pendingSync:12,suppliers:4,changelog:[]}
+];
+const idC={};
+function initC(){[...products,...supports].forEach(p=>{const n=p.reqs.map(r=>parseInt(r.id.split('-').pop())||0);idC[p.id]=n.length?Math.max(...n):0;const b=p.bom.map(x=>parseInt(x.id.split('-').pop())||0);idC[p.id+'_b']=b.length?Math.max(...b):0;});}
+function rPfx(id){if(id==='launchpad')return'LP';if(id==='plm')return'PLM';if(id.startsWith('rocket'))return'R'+id.replace('rocket','');return id.slice(0,3).toUpperCase();}
+function bPfx(id){if(id==='launchpad')return'LP-M';if(id==='plm')return'PLM-';if(id.startsWith('rocket'))return'P'+id.replace('rocket','')+'-';return id.slice(0,2).toUpperCase()+'-';}
+function nRid(id){idC[id]=(idC[id]||0)+1;return rPfx(id)+'-'+String(idC[id]).padStart(3,'0');}
+function nBid(id){idC[id+'_b']=(idC[id+'_b']||0)+1;return bPfx(id)+String(idC[id+'_b']).padStart(3,'0');}
+function getE(id){return products.find(p=>p.id===id)||supports.find(s=>s.id===id);}
+function allBom(){return[...products,...supports.filter(s=>s.id!=='plm')].reduce((a,p)=>a+p.bom.length,0);}
+function renderHome(){renderPG();renderSG();updateBadge();}
+function renderPG(){document.getElementById('product-grid').innerHTML=products.map(p=>`<div class="pcard" onclick="openDetail('${p.id}')"><div class="pcard-header"><div class="pcard-icon ${iconClass[p.color]}">${p.icon}</div><div style="flex:1"><div class="pcard-name">${p.name}</div><div class="pcard-type">${p.type}</div></div><span class="status-pill ${statusPill[p.status]}">${p.status}</span></div><div class="pcard-body"><div class="prog-labels"><span>Engineering progress</span><span>${p.progress}%</span></div><div class="prog-track"><div class="prog-fill ${colorFill[p.color]}" style="width:${p.progress}%"></div></div></div><div class="qstats"><div class="qstat"><div class="qstat-val">${p.reqs.length}</div><div class="qstat-lbl">Requirements</div></div><div class="qstat"><div class="qstat-val">${p.changes}</div><div class="qstat-lbl">Open changes</div></div><div class="qstat"><div class="qstat-val">${p.tests||'—'}</div><div class="qstat-lbl">Tests passed</div></div></div><div class="pcard-footer"><span class="open-btn">Open detail →</span><div class="wdots">${wfDots(p.wfDone,p.wfActive,p.wfTotal)}</div></div></div>`).join('');}
+function renderSG(){document.getElementById('support-grid').innerHTML=supports.map(s=>{const s1=s.id==='plm'?`<div class="scard-stat"><div class="scard-stat-val">${allBom()}</div><div class="scard-stat-lbl">BOM lines</div></div>`:`<div class="scard-stat"><div class="scard-stat-val">${s.reqs.length}</div><div class="scard-stat-lbl">Requirements</div></div>`;const s2=s.id==='plm'?`<div class="scard-stat"><div class="scard-stat-val">${s.pendingSync}</div><div class="scard-stat-lbl">Pending sync</div></div>`:`<div class="scard-stat"><div class="scard-stat-val">${s.changes||0}</div><div class="scard-stat-lbl">Open changes</div></div>`;const s3=s.id==='plm'?`<div class="scard-stat"><div class="scard-stat-val">${s.suppliers}</div><div class="scard-stat-lbl">Suppliers</div></div>`:`<div class="scard-stat"><div class="scard-stat-val">${s.bom.length}</div><div class="scard-stat-lbl">Components</div></div>`;const pl=s.id==='plm'?'Sync status':'Readiness';return`<div class="scard" onclick="openDetail('${s.id}')"><div class="scard-inner"><div class="scard-accent acc-${s.color}"></div><div style="flex:1;display:flex;flex-direction:column"><div class="scard-content"><div class="scard-top"><div class="scard-icon ${iconClass[s.color]}">${s.icon}</div><div style="flex:1"><div class="scard-name">${s.name}</div><div class="scard-sub">${s.type}</div></div><span class="status-pill ${statusPill[s.status]}">${s.status}</span></div><div><div class="prog-labels"><span>${pl}</span><span>${s.progress}%</span></div><div class="prog-track"><div class="prog-fill ${colorFill[s.color]}" style="width:${s.progress}%"></div></div></div><div class="scard-row">${s1}${s2}${s3}</div></div><div class="scard-footer"><span>Supports: ${s.supports}</span><span class="open-btn">Open detail →</span></div></div></div></div>`;}).join('');}
+function wfDots(done,active,total){let h='';for(let i=1;i<=total;i++){let c='open';if(i<=done)c='done';else if(active&&active.includes(i))c='active';h+=`<div class="wdot ${c}"></div>`;}return h;}
+function updateBadge(){const n=[...products,...supports].flatMap(p=>p.reqs).filter(r=>r.status==='In review').length;document.getElementById('review-badge').textContent=`${n} review${n!==1?'s':''} pending`;}
+function openDetail(id){
+  const e=getE(id),isS=supports.some(s=>s.id===id);
+  document.getElementById('detail-header').innerHTML=`<div class="detail-icon ${iconClass[e.color]}">${e.icon}</div><div><div class="detail-title">${e.name}</div><div class="detail-sub">${e.type} · <span class="status-pill ${statusPill[e.status]}">${e.status}</span></div></div><div class="detail-header-stats">${id==='plm'?`<div class="dhs"><div class="dhs-val" id="dh-plm-bom">${allBom()}</div><div class="dhs-lbl">BOM lines</div></div><div class="dhs"><div class="dhs-val">${e.progress}%</div><div class="dhs-lbl">Sync</div></div><div class="dhs"><div class="dhs-val">${e.pendingSync}</div><div class="dhs-lbl">Pending sync</div></div><div class="dhs"><div class="dhs-val">${e.suppliers}</div><div class="dhs-lbl">Suppliers</div></div>`:`<div class="dhs"><div class="dhs-val">${e.progress}%</div><div class="dhs-lbl">Progress</div></div><div class="dhs"><div class="dhs-val" id="dh-req">${e.reqs.length}</div><div class="dhs-lbl">Requirements</div></div>${!isS?`<div class="dhs"><div class="dhs-val">${e.tests||'—'}</div><div class="dhs-lbl">Tests</div></div>`:''}<div class="dhs"><div class="dhs-val" id="dh-bom">${e.bom.length}</div><div class="dhs-lbl">Components</div></div>`}</div>`;
+  let tabs='',panels='';
+  if(id==='plm'){tabs+=tb('plm','bom','BOM / Components',true);tabs+=tb('plm','requirements','Requirements');tabs+=tb('plm','suppliers','Suppliers');panels+=`<div id="tp-plm-bom" class="tab-panel tab-content active">${buildPLMBom()}</div>`;panels+=`<div id="tp-plm-requirements" class="tab-panel tab-content">${buildReq('plm')}</div>`;panels+=`<div id="tp-plm-suppliers" class="tab-panel tab-content">${buildSupp()}</div>`;}
+  else if(isS){tabs+=tb(id,'workflow','Workflow',true);tabs+=tb(id,'requirements',`Requirements <span class="tab-count">${e.reqs.length}</span>`);tabs+=tb(id,'bom','Components / BOM');tabs+=tb(id,'changelog','Data & changes');panels+=`<div id="tp-${id}-workflow" class="tab-panel tab-content active">${buildWf(e)}</div>`;panels+=`<div id="tp-${id}-requirements" class="tab-panel tab-content">${buildReq(id)}</div>`;panels+=`<div id="tp-${id}-bom" class="tab-panel tab-content">${buildBom(id)}</div>`;panels+=`<div id="tp-${id}-changelog" class="tab-panel tab-content">${buildCL(e)}</div>`;}
+  else{tabs+=tb(id,'workflow','Workflow',true);tabs+=tb(id,'requirements',`Requirements <span class="tab-count">${e.reqs.length}</span>`);tabs+=tb(id,'bom','Components / BOM');tabs+=tb(id,'changelog','Data & changes');tabs+=tb(id,'qualification','Qualification');panels+=`<div id="tp-${id}-workflow" class="tab-panel tab-content active">${buildWf(e)}</div>`;panels+=`<div id="tp-${id}-requirements" class="tab-panel tab-content">${buildReq(id)}</div>`;panels+=`<div id="tp-${id}-bom" class="tab-panel tab-content">${buildBom(id)}</div>`;panels+=`<div id="tp-${id}-changelog" class="tab-panel tab-content">${buildCL(e)}</div>`;panels+=`<div id="tp-${id}-qualification" class="tab-panel tab-content">${buildQual()}</div>`;}
+  document.getElementById('detail-tabs').innerHTML=tabs;
+  document.getElementById('detail-tab-panels').innerHTML=panels;
+  document.getElementById('breadcrumb').innerHTML=`<span class="bc-link" onclick="goHome()">Products</span><span class="bc-sep">›</span><span class="bc-current">${e.name}</span>`;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-detail').classList.add('active');
+  window.scrollTo(0,0);}
+function tb(pid,tab,label,active){return`<button class="tab-btn${active?' active':''}" onclick="switchTab('${pid}','${tab}')">${label}</button>`;}
+function buildWf(e){const labels=['Customer<br>requirements','Specifications &amp;<br>req. mgmt','Data base &amp;<br>change mgmt','BOM, ICD &amp;<br>specifications','Inventory &amp;<br>PLM','Qualification &amp;<br>testing','Requirements<br>meeting'];const total=e.wfTotal||7;let s='';for(let i=1;i<=total;i++){let c='open',l=i;if(i<=e.wfDone){c='done';l='✓';}else if(e.wfActive&&e.wfActive.includes(i))c='active';s+=`<div class="wf-step"><div class="wf-node ${c}">${l}</div><div class="wf-label">${labels[i-1]||'Step '+i}</div></div>`;}return`<div class="workflow-steps">${s}</div><div class="wf-hint">Active steps: ${e.wfActive?e.wfActive.join(', '):'—'}</div>`;}
+function sC(s){return s==='Verified'?'st-verified':s==='In review'?'st-review':'st-draft';}
+function bC(s){return s==='Released'?'st-released':s==='In review'?'st-review':s==='In stock'?'st-instock':s==='On order'?'st-onorder':s==='TBD'?'st-tbd':'st-draft';}
+function buildReq(id){
+  const e=getE(id);
+  const rows=e.reqs.length?e.reqs.map(r=>`<tr><td class="mono">${r.id}</td><td>${r.text}</td><td style="white-space:nowrap;font-size:11px;color:#9c9a92">${r.source}</td><td><span class="requestor-tag">${r.requestor||'—'}</span></td><td><span class="req-status ${sC(r.status)}">${r.status}</span></td></tr>`).join(''):`<tr><td colspan="5" class="empty-state" style="padding:24px 0">No requirements yet — add one below.</td></tr>`;
+  const reqOpts=allSystemNames().map(n=>`<option value="${n}">${n}</option>`).join('');
+  return`<table class="req-table"><thead><tr><th style="width:84px">ID</th><th>Requirement</th><th style="width:96px">Source</th><th style="width:130px">Requestor</th><th style="width:86px">Status</th></tr></thead><tbody id="rb-${id}">${rows}</tbody></table>
+    <div class="add-bar">
+      <input type="text" id="ri-${id}" placeholder="Add a new requirement…" onkeydown="if(event.key==='Enter')addR('${id}')"/>
+      <select id="rs-${id}" title="Source"><option value="">Source…</option><option>Customer</option><option>Engineering</option><option>Ground ops</option><option>System eng.</option></select>
+      <select id="rreq-${id}" title="Requestor — which system is requesting this"><option value="">Requestor…</option>${reqOpts}</select>
+      <select id="rst-${id}"><option value="Draft">Draft</option><option value="In review">In review</option><option value="Verified">Verified</option></select>
+      <button class="btn-primary" onclick="addR('${id}')">+ Add</button>
+    </div>
+    <div style="font-size:10px;color:#b0aea6;margin-top:6px">↗ Requestor = which system is requesting this requirement</div>`;}
+function buildBom(id){const e=getE(id);const rows=e.bom.length?e.bom.map(b=>`<tr><td class="mono">${b.id}</td><td>${b.desc}</td><td style="font-weight:500;color:#1a1a18">${b.qty}</td><td style="font-size:12px;color:#6b6b67">${b.assembly||'—'}</td><td><span class="req-status ${bC(b.status)}">${b.status}</span></td></tr>`).join(''):`<tr><td colspan="5" class="empty-state" style="padding:24px 0">No components yet — add one below.</td></tr>`;return`<div class="tab-section-title">Component list (BOM)</div><table class="data-table"><thead><tr><th style="width:88px">Part no.</th><th>Description</th><th style="width:48px">Qty</th><th>Assembly / system</th><th style="width:90px">Status</th></tr></thead><tbody id="bb-${id}">${rows}</tbody></table><div class="add-bar"><input type="text" id="bd-${id}" placeholder="Component description…" onkeydown="if(event.key==='Enter')addB('${id}')"/><input type="number" id="bq-${id}" placeholder="Qty" style="width:60px;min-width:60px" min="1" value="1"/><input type="text" id="ba-${id}" placeholder="Assembly / system" style="width:140px;min-width:90px"/><select id="bs-${id}"><option value="Draft">Draft</option><option value="In review">In review</option><option value="Released">Released</option><option value="In stock">In stock</option><option value="On order">On order</option></select><button class="btn-primary" onclick="addB('${id}')">+ Add</button></div>`;}
+function buildPLMBom(){const all=[...products,...supports.filter(s=>s.id!=='plm')];let h='';all.forEach(e=>{const rows=e.bom.length?e.bom.map(b=>`<tr><td class="mono">${b.id}</td><td>${b.desc}</td><td style="font-weight:500;color:#1a1a18">${b.qty}</td><td style="font-size:12px;color:#6b6b67">${b.assembly||'—'}</td><td><span class="req-status ${bC(b.status)}">${b.status}</span></td></tr>`).join(''):`<tr><td colspan="5" style="padding:8px 0;font-size:11px;color:#9c9a92;font-style:italic">No components</td></tr>`;h+=`<div class="plm-product-block"><div class="plm-block-header"><div class="plm-block-icon ${iconClass[e.color]}">${e.icon}</div>${e.name}<span style="margin-left:auto;font-size:11px;color:#9c9a92;font-weight:400" id="plmc-${e.id}">${e.bom.length} components</span></div><table class="data-table" style="margin-top:0"><thead><tr><th style="width:88px">Part no.</th><th>Description</th><th style="width:48px">Qty</th><th>Assembly</th><th style="width:90px">Status</th></tr></thead><tbody id="pb-${e.id}">${rows}</tbody></table><div class="add-bar" style="margin-bottom:8px"><input type="text" id="pd-${e.id}" placeholder="Add component to ${e.name}…" onkeydown="if(event.key==='Enter')addBP('${e.id}')"/><input type="number" id="pq-${e.id}" placeholder="Qty" style="width:60px;min-width:60px" min="1" value="1"/><select id="ps-${e.id}"><option value="Draft">Draft</option><option value="In review">In review</option><option value="Released">Released</option><option value="In stock">In stock</option><option value="On order">On order</option></select><button class="btn-primary" onclick="addBP('${e.id}')">+ Add</button></div></div>`;});return`<div class="tab-section-title">BOM by product</div>${h}`;}
+function buildSupp(){return`<table class="data-table"><thead><tr><th>Supplier</th><th>Parts supplied</th><th>Lead time</th><th>Status</th></tr></thead><tbody><tr><td class="strong-cell">Aerojet Systems</td><td>Turbopump, valves</td><td>16 weeks</td><td><span class="req-status st-verified">Active</span></td></tr><tr><td class="strong-cell">SteelForm GmbH</td><td>Structural rings, adapters</td><td>10 weeks</td><td><span class="req-status st-verified">Active</span></td></tr><tr><td class="strong-cell">AvioElect Ltd</td><td>Avionics enclosures</td><td>8 weeks</td><td><span class="req-status st-review">Review</span></td></tr><tr><td class="strong-cell">CompThermal AS</td><td>TPS panels, fairing</td><td>20 weeks</td><td><span class="req-status st-draft">Onboarding</span></td></tr></tbody></table>`;}
+function buildCL(e){if(!e.changelog||!e.changelog.length)return`<div class="empty-state">No changes logged yet.</div>`;return`<div class="tab-section-title">Change log</div>`+e.changelog.map(c=>`<div class="change-row"><div class="change-dot" style="background:${c.dot}"></div><div class="change-body"><div class="change-title">${c.title}</div><div class="change-meta">${c.meta}</div></div><span class="cs ${c.cs}">${c.label}</span></div>`).join('');}
+function buildQual(){return`<div class="dstat-row"><div class="dstat"><div class="dstat-val">18</div><div class="dstat-lbl">Tests passed</div></div><div class="dstat"><div class="dstat-val">5</div><div class="dstat-lbl">In progress</div></div><div class="dstat"><div class="dstat-val">3</div><div class="dstat-lbl">Not started</div></div><div class="dstat"><div class="dstat-val">68%</div><div class="dstat-lbl">Coverage</div></div></div><div class="qual-grid"><div class="qual-item"><div class="qual-name">Vibration & acoustic testing</div><div class="qual-meta">Stage 1 · Completed Mar 5</div><div class="qual-bar-track"><div class="qual-bar-fill fill-green" style="width:100%"></div></div></div><div class="qual-item"><div class="qual-name">Thermal vacuum cycling</div><div class="qual-meta">Avionics bay · In progress</div><div class="qual-bar-track"><div class="qual-bar-fill fill-blue" style="width:60%"></div></div></div><div class="qual-item"><div class="qual-name">Stage separation test</div><div class="qual-meta">Interstage · Completed Feb 28</div><div class="qual-bar-track"><div class="qual-bar-fill fill-green" style="width:100%"></div></div></div><div class="qual-item"><div class="qual-name">Propellant feed system proof</div><div class="qual-meta">Stage 1 · In progress</div><div class="qual-bar-track"><div class="qual-bar-fill fill-blue" style="width:45%"></div></div></div></div>`;}
+function addR(id){const inp=document.getElementById('ri-'+id);const src=document.getElementById('rs-'+id).value||'—';const req=document.getElementById('rreq-'+id).value||'—';const st=document.getElementById('rst-'+id).value;const txt=inp.value.trim();if(!txt){inp.focus();return;}const e=getE(id),r={id:nRid(id),text:txt,source:src,requestor:req,status:st};e.reqs.push(r);inp.value='';const tb=document.getElementById('rb-'+id);if(tb){const tr=document.createElement('tr');tr.innerHTML=`<td class="mono">${r.id}</td><td>${r.text}</td><td style="white-space:nowrap;font-size:11px;color:#9c9a92">${r.source}</td><td><span class="requestor-tag">${r.requestor}</span></td><td><span class="req-status ${sC(r.status)}">${r.status}</span></td>`;if(tb.querySelector('td[colspan]'))tb.innerHTML='';tb.appendChild(tr);tr.scrollIntoView({behavior:'smooth',block:'nearest'});}const tc=document.querySelector('#detail-tabs .tab-btn[onclick*="requirements"] .tab-count');if(tc)tc.textContent=e.reqs.length;const dh=document.getElementById('dh-req');if(dh)dh.textContent=e.reqs.length;updateBadge();renderHome();}
+function addB(id){const d=document.getElementById('bd-'+id),q=document.getElementById('bq-'+id),a=document.getElementById('ba-'+id),s=document.getElementById('bs-'+id);const desc=d.value.trim();if(!desc){d.focus();return;}const e=getE(id),item={id:nBid(id),desc,qty:parseInt(q.value)||1,assembly:a.value.trim()||'—',status:s.value};e.bom.push(item);d.value='';q.value='1';a.value='';const tb=document.getElementById('bb-'+id);if(tb){const tr=document.createElement('tr');tr.innerHTML=`<td class="mono">${item.id}</td><td>${item.desc}</td><td style="font-weight:500;color:#1a1a18">${item.qty}</td><td style="font-size:12px;color:#6b6b67">${item.assembly}</td><td><span class="req-status ${bC(item.status)}">${item.status}</span></td>`;if(tb.querySelector('td[colspan]'))tb.innerHTML='';tb.appendChild(tr);tr.scrollIntoView({behavior:'smooth',block:'nearest'});}const dhb=document.getElementById('dh-bom');if(dhb)dhb.textContent=e.bom.length;renderHome();}
+function addBP(pid){const d=document.getElementById('pd-'+pid),q=document.getElementById('pq-'+pid),s=document.getElementById('ps-'+pid);const desc=d.value.trim();if(!desc){d.focus();return;}const e=getE(pid),item={id:nBid(pid),desc,qty:parseInt(q.value)||1,assembly:'—',status:s.value};e.bom.push(item);d.value='';q.value='1';const tb=document.getElementById('pb-'+pid);if(tb){const tr=document.createElement('tr');tr.innerHTML=`<td class="mono">${item.id}</td><td>${item.desc}</td><td style="font-weight:500;color:#1a1a18">${item.qty}</td><td style="font-size:12px;color:#6b6b67">—</td><td><span class="req-status ${bC(item.status)}">${item.status}</span></td>`;if(tb.querySelector('td[colspan]'))tb.innerHTML='';tb.appendChild(tr);const hdr=document.getElementById('plmc-'+pid);if(hdr)hdr.textContent=e.bom.length+' components';tr.scrollIntoView({behavior:'smooth',block:'nearest'});}const dplm=document.getElementById('dh-plm-bom');if(dplm)dplm.textContent=allBom();renderHome();}
+function goHome(){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-home').classList.add('active');document.getElementById('breadcrumb').innerHTML='<span class="bc-current">Products</span>';renderHome();window.scrollTo(0,0);}
+function switchTab(pid,tab){document.querySelectorAll('#detail-tabs .tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('#detail-tab-panels .tab-content').forEach(c=>c.classList.remove('active'));const p=document.getElementById(`tp-${pid}-${tab}`);if(p)p.classList.add('active');document.querySelectorAll('#detail-tabs .tab-btn').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes(`'${tab}'`))b.classList.add('active');});}
+const mE={mp:'🚀',ms:'🏗'},mC={mp:'blue',ms:'amber'};
+function openModal(t){document.getElementById('modal-'+t).classList.add('open');}
+function closeModal(t){document.getElementById('modal-'+t).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+function pickEmoji(p,el){document.querySelectorAll(`#${p}-emoji-row .emoji-opt`).forEach(e=>e.classList.remove('selected'));el.classList.add('selected');mE[p]=el.dataset.e;}
+function pickColor(p,el){document.querySelectorAll(`#${p}-color-row .color-opt`).forEach(e=>e.classList.remove('selected'));el.classList.add('selected');mC[p]=el.dataset.c;}
+function submitProduct(){const name=document.getElementById('mp-name').value.trim(),type=document.getElementById('mp-type').value.trim(),status=document.getElementById('mp-status').value;if(!name){document.getElementById('mp-name').focus();return;}const id='prod_'+Date.now();products.push({id,name,type:type||'Product',status,icon:mE.mp,color:mC.mp,progress:0,reqs:[],bom:[],wfDone:0,wfActive:[],wfTotal:7,tests:'0/0',changes:0,changelog:[]});idC[id]=0;idC[id+'_b']=0;document.getElementById('mp-name').value='';document.getElementById('mp-type').value='';closeModal('product');renderHome();}
+function submitSupport(){const name=document.getElementById('ms-name').value.trim(),type=document.getElementById('ms-type').value.trim(),status=document.getElementById('ms-status').value,sup=document.getElementById('ms-supports').value.trim();if(!name){document.getElementById('ms-name').focus();return;}const id='supp_'+Date.now();supports.push({id,name,type:type||'Support system',status,icon:mE.ms,color:mC.ms,progress:0,supports:sup||'all products',reqs:[],bom:[],interfaces:0,changes:0,changelog:[]});idC[id]=0;idC[id+'_b']=0;document.getElementById('ms-name').value='';document.getElementById('ms-type').value='';document.getElementById('ms-supports').value='';closeModal('support');renderHome();}
+initC();renderHome();
+</script>
+</body>
+</html>
